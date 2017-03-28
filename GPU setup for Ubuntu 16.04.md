@@ -1,4 +1,4 @@
-# How to set up VPA-Faster RCNN Environment on Ubuntu 16.04 :
+# How to set up GPU-supported Environment for Caffe on Ubuntu 16.04 :
 
 ### Updated : 2017,3,28 by Po-Hsuan Huang
 
@@ -13,6 +13,9 @@
 ```
    $sudo ubuntu-drivers devices
 ```
+* Installation of Nvida driver can be done manually, but we will intall it when installing Cuda.
+   
+
 
 ## 2. Install Cuda
 
@@ -27,6 +30,7 @@
 ```
 
 * Install CUDA for Ubuntu
+ http://askubuntu.com/questions/799184/how-can-i-install-cuda-on-ubuntu-16-04
  There is an Linux installation guide. However, it is basically only those steps:
     
     Download CUDA: I used the 15.04 version and "runfile (local)". That is 1.1 GB.
@@ -118,7 +122,7 @@
    
    > $cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D WITH_V4L=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D WITH_CUBLAS=ON -DCUDA_NVCC_FLAGS="-D_FORCE_INLINES" -D OPEN_EXTRA_MODULES_PATH=~/opencv_contirb-master/modules .. 
    
- Don't forget the two dots at the end in the above command. The OPEN_EXTRA_MODULES_PATH option allows you to use the non-free SIFT and SURF algorithms stores in ~/opencv_contrib-master. It takes some time, and you should see your make setup in your output
+ Don't forget the two dots at the end in the above command. The OPEN_EXTRA_MODULES_PATH option allows you to use the non-free SIFT and SURF algorithms stores in ~/opencv_contrib-master. It takes some time, and you should see your make setup in your output. https://github.com/opencv/opencv_contrib
   
  Then make file using with multiple threads (such as -j12) to accelerate.
 
@@ -126,7 +130,25 @@
  
  > $make -j $(($(nproc) + 1))
   
- Always > make clean before >make -j12 
+ Note: Always **make clean** before **make -j12** 
+ 
+ ### Integration with the Caffe
+
+ Return to the Caffe directory and perform a cleanup operation with the command
+
+ make clean
+
+ (Read more here: https://github.com/BVLC/caffe/wiki/Ubuntu-16.04-or-15.10-Installation-Guide)
+
+ First, edit the Makefile.config to include the OpenCV 3.1 library like this...
+ 
+ > OPENCV_VERSION := 3
+
+ > LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib /usr/lib/x86_64-linux-gnu/hdf5/serial /usr/local/share/OpenCV/3rdparty/lib/
+
+ Then, recompile the entire Caffe project.
+ 
+ 
   
 ## 5. Install caffe
 
@@ -152,148 +174,155 @@ kate ./Makefile.config &
 
 * The following line in the configuration file tells the program to use CPU only for the computations. 
 
-> CPU_ONLY := 1
+ > CPU_ONLY := 1
 
 * ** CPU_ONLY option is enabled for a computer without any NVIDIA graphics card**
  Change the line if needed, by commenting it out (# CPU_ONLY := 1) if you have an NVIDIA graphics card with the proprietary driver, CUDA toolkit and CUDNN installed. Jump to the end of this guide to read about how to install the GPU support prerequisites.
 
-The Makefile.config should contain the following lines, so find them and fill them in.
+ The Makefile.config should contain the following lines, so find them and fill them in.
 
-> PYTHON_INCLUDE := /usr/include/python2.7 /usr/lib/python2.7/dist-packages/numpy/core/include  
+ > PYTHON_INCLUDE := /usr/include/python2.7 /usr/lib/python2.7/dist-packages/numpy/core/include  
 
  Uncomment:
 
-> WITH_PYTHON_LAYER := 1
+ > WITH_PYTHON_LAYER := 1
 
-> INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include /usr/include/hdf5/serial
+ > INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include /usr/include/hdf5/serial
 
-> LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/hdf5/serial
+ > LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/hdf5/serial
 
-(For ways to create an isolated Python environment, explore the topic of virtual environments here: http://docs.python-guide.org/en/latest/dev/virtualenvs/)
+ (For ways to create an isolated Python environment, explore the topic of virtual environments here: http://docs.python-guide.org/en/latest/dev/virtualenvs/)
 
-If your CUDA is 8.0, find this in Makefile.config..
+ If your CUDA is 8.0, find this in Makefile.config..
 
-> CUDA_DIR := /usr/local/cuda
+ > CUDA_DIR := /usr/local/cuda
 
-And replace it with this..
+ And replace it with this..
 
-> CUDA_DIR := /usr/local/cuda-8.0
-
-
-Now lets continue with the instructions for the Ubuntu 15.10 first, followed by the instructions for Ubuntu 16.04 users. 
+ > CUDA_DIR := /usr/local/cuda-8.0
 
 
-Now for both platforms lets return to the unpacked Caffe directory caffe-master and enter these commands:
-
-```
-cd python
-
-for req in $(cat requirements.txt); do pip install $req; done
-```
+ Now lets continue with the instructions for the Ubuntu 15.10 first, followed by the instructions for Ubuntu 16.04 users. 
 
 
---------------------------------------------------------------------------------------------------------------
+ Now for both platforms lets return to the unpacked Caffe directory caffe-master and enter these commands:
+
+  ```
+  cd python
+
+  for req in $(cat requirements.txt); do pip install $req; done
+  ```
 
 
-NOTE: If the Ubuntu operating system was updated, perhaps the Python layer needs to be updated and recompiled, because the Python module no longer works. Perform this step again in that case.
-
-```
-for req in $(cat requirements.txt); do pip install $req; done
-```
-
-In case of any problems, try:
-
-```
-for req in $(cat requirements.txt); do sudo -H pip install $req --upgrade; done
-```
-
-The default Python version is 2. You can edit the Makefile.conf to enable the Python 3, but this will fail during the linking phase: boost_python3 cannot be found on Ubuntu 16.04. Instead, this file should be /usr/lib/x86_64-linux-gnu/libboost_python-py35.so.1.58.0. This requires further testing. 
-
---------------------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------------------
 
 
-The next step is to build Caffe:
+ NOTE: If the Ubuntu operating system was updated, perhaps the Python layer needs to be updated and recompiled, because the Python module no longer works. Perform this step again in that case.
 
-```
-cd ..
-```
-(now you are in caffe-master directory)
+ ```
+ for req in $(cat requirements.txt); do pip install $req; done
+ ```
 
-The build process will fail in Ubuntu 16.04. Edit the Makefile with an editor such as 
+ In case of any problems, try:
 
-```
-vim ./Makefile
-```
-and replace this line:
-```
-NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
-```
-with the following line
-```
-NVCCFLAGS += -D_FORCE_INLINES -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
-```
+ ```
+ for req in $(cat requirements.txt); do sudo -H pip install $req --upgrade; done
+ ```
 
-(See the discussion at: https://github.com/BVLC/caffe/issues/4046)
+ The default Python version is 2. You can edit the Makefile.conf to enable the Python 3, but this will fail during the linking phase: boost_python3 cannot be found on Ubuntu 16.04. Instead, this file should be /usr/lib/x86_64-linux-gnu/libboost_python-py35.so.1.58.0. This requires further testing. 
 
-When compiling with OpenCV 3.0 or errors show `imread`,`imencode`,`imdecode` or `VideoCapture`
-open your Makefile with some text editor, add opencv_imgcodecs behind.
-```
+ --------------------------------------------------------------------------------------------------------------
+
+
+ The next step is to build Caffe:
+
+ ```
+ cd ..
+ ```
+ (now you are in caffe-master directory)
+
+ The build process will fail in Ubuntu 16.04. Edit the Makefile with an editor such as 
+
+ ```
+ vim ./Makefile
+ ```
+ and replace this line:
+ ```
+ NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+ ```
+ with the following line
+ ```
+ NVCCFLAGS += -D_FORCE_INLINES -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+ ```
+
+ (See the discussion at: https://github.com/BVLC/caffe/issues/4046)
+
+ When compiling with OpenCV 3.0 or errors show `imread`,`imencode`,`imdecode` or `VideoCapture`
+ open your Makefile with some text editor, add opencv_imgcodecs behind.
+ ```
  LIBRARIES += glog gflags protobuf leveldb snappy \
   lmdb boost_system boost_filesystem hdf5_hl hdf5 m \
   opencv_core opencv_highgui opencv_imgproc opencv_imgcodecs opencv_videoio
-```
-(See the discussion at: https://github.com/BVLC/caffe/issues/1276)
+ ```
+ (See the discussion at: https://github.com/BVLC/caffe/issues/1276)
 
-Then
-```
+ Then
+ ```
 make all
 make test
 make runtest
 make pycaffe      -should be finished already, so you can omit this one
 make distribute
-```
+ ```
 
-Note that the build process can be sped up by appending -j $(($(nproc) + 1)) to the above commands, which distributes the build across the available processors on your system. For example:
+ Note that the build process can be sped up by appending -j $(($(nproc) + 1)) to the above commands, which distributes the build across the available processors on your system. For example:
 
-`make all`
+ `make all`
 
-can become
+ can become
 
-`make all -j $(($(nproc) + 1))`
+ `make all -j $(($(nproc) + 1))`
 
-In order to make the Python work with Caffe, open the file ~/.bashrc for editing in your favorite text editor. There, add the following line at the end of file:
+ In order to make the Python work with Caffe, open the file ~/.bashrc for editing in your favorite text editor. There, add the following line at the end of file:
 
-> export PYTHONPATH=/path/to/caffe-master/python:$PYTHONPATH
+ > export PYTHONPATH=/path/to/caffe-master/python:$PYTHONPATH
 
-You can also execute that same line immediately as a command for immediate effects.
+ You can also execute that same line immediately as a command for immediate effects.
 
-In order to use the Caffe binaries, libraries, or include files, they need to be reachable through the search path, so one solution is to copy them into their respective directories: from the distribute directory to the /usr/bin or /usr/lib or /usr/include.
+ In order to use the Caffe binaries, libraries, or include files, they need to be reachable through the search path, so one solution is to copy them into their respective directories: from the distribute directory to the /usr/bin or /usr/lib or /usr/include.
 
-The binary models can be download with the following script. In caffe-master directory, 
+ The binary models can be download with the following script. In caffe-master directory, 
 
-```
+ ```
 cd scripts
 ./download_model_binary.py ../models/bvlc_alexnet/
 ./download_model_binary.py ../models/bvlc_googlenet/
 ./download_model_binary.py ../models/bvlc_reference_caffenet/
 ./download_model_binary.py ../models/bvlc_reference_rcnn_ilsvrc13/
 ./download_model_binary.py ../models/finetune_flickr_style/
-```
+ ```
 
 * For more models, see https://github.com/BVLC/caffe/wiki/Model-Zoo *
 
 
-For most Linux programs compiled from source, you can attempt to build a package that can be installed and uninstalled with a single click.
+ For most Linux programs compiled from source, you can attempt to build a package that can be installed and uninstalled with a single click.
 
-```
-sudo apt-get install checkinstall
-```
+ ```
+ sudo apt-get install checkinstall
+ ```
 
-Now, when you execute the:
+ Now, when you execute the:
 
-```
+ ```
 sudo checkinstall
-```
+ ```
 
-and fill out a form with some easy questions, you will have the package made automatically. However, this uses the command "make install" in the background, which will fail, because the Caffe project does not have the target "install" configured in the Makefile.
+ and fill out a form with some easy questions, you will have the package made automatically. However, this uses the command "make install" in the background, which will fail, because the Caffe project does not have the target "install" configured in the Makefile.
+
+------------------------------------------------------------------------------------------------------------------------
+Note:
+
+You may also need to manually update your libprotobuf2.6.1 to libprotobuf3.0.0 
+https://packages.debian.org/sid/libprotobuf-dev
+
 

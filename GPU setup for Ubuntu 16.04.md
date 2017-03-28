@@ -1,5 +1,7 @@
 # How to set up VPA-Faster RCNN Environment on Ubuntu 16.04 :
 
+### Updated : 2017,3,28 by Po-Hsuan Huang
+
 ## 1. Install Nvida Driver
 
 * The GPU support prerequisites https://github.com/BVLC/caffe/wiki/Ubuntu-16.04-or-15.10-Installation-Guide#the-gpu-support-prerequisites.
@@ -89,7 +91,7 @@
    sudo apt-get install --assume-yes libvorbis-dev libxvidcore-dev v4l-utils
 ```
 * In order to install the NVIDIA Cuda Toolkit with CUDNN library
-  The following guide includes the how-to instructions for the installation of BVLC/Caffe on Ubuntu 16.04 with Cuda Toolkit 8.0, CUDNN 5.1 library and OpenCV version 2 or 3. (A small record remains from the previous tutorial for Ubuntu 15.10 with the Cuda Toolkit 7.5, but that part will not be updated any further.) This guide also covers the KUbuntu distribution and the related distributions.
+  The following guide includes the how-to instructions for the installation of BVLC/Caffe on Ubuntu 16.04 with Cuda Toolkit 8.0, CUDNN 5.1 library and OpenCV version 3. 
  Execute these commands first:
  
    ```  
@@ -102,7 +104,30 @@
    sudo apt-get install -y libgflags-dev libgoogle-glog-dev liblmdb-dev
    ```
 
+   Download the latest source archive for OpenCV 3.1 from https://github.com/opencv/opencv. (Do not download it from http://opencv.org/downloads.html, because the official OpenCV 3.1 does not support CUDA 8.0.) You can git clone the archive or download the .zip file to downlodas fodler. Here we use .zip file as an example.
+   
+   > $unzip opencv-master.zip
+   
+   > $unzip opencv_contrib-master.zip
+   
+   Move the unpacked folders to your home dir ~/ , and enter opencv-master, Execute:
+   
+   > $mkdir build
+   
+   > $cd build/
+   
+   > $cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D WITH_V4L=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D WITH_CUBLAS=ON -DCUDA_NVCC_FLAGS="-D_FORCE_INLINES" -D OPEN_EXTRA_MODULES_PATH=~/opencv_contirb-master/modules .. 
+   
+ Don't forget the two dots at the end in the above command. The OPEN_EXTRA_MODULES_PATH option allows you to use the non-free SIFT and SURF algorithms stores in ~/opencv_contrib-master. It takes some time, and you should see your make setup in your output
+  
+ Then make file using with multiple threads (such as -j12) to accelerate.
 
+ > $make clean
+ 
+ > $make -j $(($(nproc) + 1))
+  
+ Always > make clean before >make -j12 
+  
 ## 5. Install caffe
 
 * Go to the https://github.com/BVLC/caffe and download the zip archive. Unpack it to ~/bin/ or any other location. Enter the caffe-master directory in the terminal window.

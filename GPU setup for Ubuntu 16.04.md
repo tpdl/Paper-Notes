@@ -184,6 +184,9 @@ kate ./Makefile.config &
  > PYTHON_INCLUDE := /usr/include/python2.7 /usr/lib/python2.7/dist-packages/numpy/core/include  
 
  Uncomment:
+ 
+  > uSE_CUDNN := 1
+
 
  > WITH_PYTHON_LAYER := 1
 

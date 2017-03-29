@@ -130,7 +130,7 @@
  
  > $make -j $(($(nproc) + 1))
   
- Note: Always **make clean** before **make -j12** 
+ Note: Always **make clean** before **make -j12** (is not pass, sudo make)
  
  ### Integration with the Caffe
 
@@ -271,11 +271,11 @@ kate ./Makefile.config &
 
  Then
  ```
-make all
-make test
-make runtest
-make pycaffe      -should be finished already, so you can omit this one
-make distribute
+sudo make all -j8
+sudo make test
+sudo make runtest
+sudo make pycaffe      -should be finished already, so you can omit this one
+sudo make distribute
  ```
 
  Note that the build process can be sped up by appending -j $(($(nproc) + 1)) to the above commands, which distributes the build across the available processors on your system. For example:

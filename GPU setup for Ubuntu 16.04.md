@@ -271,7 +271,7 @@ kate ./Makefile.config &
 
  Then
  ```
-sudo make all -j8
+sudo make all 
 sudo make test
 sudo make runtest
 sudo make pycaffe      -should be finished already, so you can omit this one
@@ -328,4 +328,4 @@ Note:
 You may also need to manually update your libprotobuf2.6.1 to libprotobuf3.0.0 
 https://packages.debian.org/sid/libprotobuf-dev
 
-
+Check stackoverflow. You can solve your problem by searching most of times.
